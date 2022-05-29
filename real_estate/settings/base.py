@@ -1,5 +1,11 @@
-import environ
+from pickle import TRUE
+from django.utils.log import DEFAULT_LOGGING
+import logging.config
+import logging
+from datetime import timedelta
 from pathlib import Path
+
+import environ
 
 env = environ.Env(DEBUG=(bool, False))
 
@@ -34,10 +40,13 @@ DJANGO_APPS = [
 
 SITE_ID = 1
 
-THIRD_PARTY_APPS=[
+THIRD_PARTY_APPS = [
     'rest_framework',
     'django_filters',
-    'django_countries','phonenumber_field',
+    'django_countries',
+    'phonenumber_field',
+    'djoser',
+    'rest_framework_simplejwt',
 ]
 
 LOCAL_APPS = [
@@ -78,7 +87,6 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'real_estate.wsgi.application'
-
 
 
 # Password validation
@@ -128,10 +136,45 @@ MEDIA_ROOT = BASE_DIR / "mediafiles"
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = 'users.User'
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+    )
+}
 
-import logging
-import logging.config
-from django.utils.log import DEFAULT_LOGGING
+
+SIMPLE_JWT = {
+    "AUTH_HEADER_TYPES": (
+        "Bearer",
+        "JWT",
+    ),
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=120),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+    'SIGNING_KEY': env("SIGNING_KEY"),
+    'AUTH_HEADER_NAME': "HTTP_AUTHORIZATION",
+    'AUTH_TOKEN_CLASSES': ("rest_framework_simplejwt.tokens.AccessToken",),
+}
+
+DJOSER = {
+    "LOGIN_FIELD": "email",
+    "USER_CREATE_PASSWORD_RETYPE": True,
+    "USERNAME_CHANGED_EMAIL_CONFIRMATION": True,
+    "SEND_CONFIRMATION_EMAIL": True,
+    "PASSWORD_RESET_CONFIRM_URL": "password/reset/confirm/{uid}/{token}",
+    "SET_PASSWORD_RETYPE": True,
+    "PASSWORD_RESET_CONFIRM_RETYPE": True,
+    "USERNAME_RESET_CONFIRM_URL": "email/reset/confirm/{uid}/{token}",
+    "ACTIVATION_URL": "activate/{uid}/{token}",
+    "SEND_ACTIVATION_EMAIL": True,
+    "SERIALIZERS": {
+        "user_create": "apps.users.serializers.CreateUserSerializer,",
+        "user": "apps.users.serializers.UserSerializer",
+        "current_user": "apps.users.serializers.UserSerializer",
+        "user_delete": "djoser.serializers.UserDeleteSerializer",
+    }
+}
+
+
 
 logger = logging.getLogger(__name__)
 
@@ -142,9 +185,9 @@ logging.config.dictConfig({
     "disable_existing_loggers": False,
     "formatters": {
         "console": {
-            "format":"%(asctime)s %(name)-12s %(levelname)-8s %(message)s",
+            "format": "%(asctime)s %(name)-12s %(levelname)-8s %(message)s",
         },
-        "file": {"format": "%(asctime)s %(name)-12s %(levelname)-8s %(message)s",},
+        "file": {"format": "%(asctime)s %(name)-12s %(levelname)-8s %(message)s", },
         "django.server": DEFAULT_LOGGING["formatters"]["django.server"],
     },
     "handlers": {
@@ -155,15 +198,15 @@ logging.config.dictConfig({
         "file": {
             "level": "INFO",
             "class": "logging.FileHandler",
-            "formatter":"file",
+            "formatter": "file",
             "filename": "logs/real_estate.log",
         },
         "django.server": DEFAULT_LOGGING["handlers"]["django.server"],
     },
     "loggers": {
-        "":{"level": "INFO", "handlers":["console","file"],"propagate": False},
-        "apps":{
-            "level": "INFO", "handlers":["console"],"propagate":False
+        "": {"level": "INFO", "handlers": ["console", "file"], "propagate": False},
+        "apps": {
+            "level": "INFO", "handlers": ["console"], "propagate": False
         },
         "django.server": DEFAULT_LOGGING["loggers"]["django.server"],
     },
