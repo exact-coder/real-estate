@@ -2,7 +2,6 @@ import random
 import string
 
 from autoslug import AutoSlugField
-
 from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator
 from django.db import models
@@ -34,13 +33,19 @@ class Property(TimeStampUUIDModel):
         COMMERCIAL = "Commercial", _("Commercial")
         OTHER = "Other", _("Other")
 
-    user = models.ForeignKey(User, verbose_name=_("Agent, Seller or Buyer"), related_name="agent_buyer", on_delete=models.DO_NOTHING),
+    user = models.ForeignKey(
+        User,
+        verbose_name=_("Agent,Seller or Buyer"),
+        related_name="agent_buyer",
+        on_delete=models.DO_NOTHING,
+    )
+    
     title = models.CharField(verbose_name=_("Property Title"), max_length=250)
     slug = AutoSlugField(populate_from="title",unique = True, always_update=True)
     ref_code = models.CharField(verbose_name=_("Property Reference Code"), max_length=255,unique=True, blank=True)
     description = models.TextField(_("Description"),default="Default Description...update me please....",)
     country = CountryField(verbose_name=_("Country"), default="BD", blank_label="(Select Country)",)
-    city = models.CharField(verbose_name=_("City"), max_length=250,default="Bangladesh")
+    city = models.CharField(verbose_name=_("City"), max_length=250,default="Chattogram")
     postal_code = models.CharField(verbose_name=_("Postal Code"), max_length=150,default="27")
     street_address = models.CharField(verbose_name=_("Street Address"), max_length=150, default="Bosundora 6 No")
     property_number = models.IntegerField(verbose_name=_("Property Number"), validators=[MinValueValidator(1)], default=122)
@@ -72,7 +77,7 @@ class Property(TimeStampUUIDModel):
 
     def save(self, *args, **kwargs):
         self.title = str.title(self.title)
-        self.description = str.description(self.description)
+        self.description = str.capitalize(self.description)
         self.ref_code = "".join(random.choices(string.ascii_uppercase + string.digits, k=15))
         super(Property, self).save(*args, **kwargs)
 
